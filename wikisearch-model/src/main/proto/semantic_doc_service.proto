@@ -1,6 +1,7 @@
 syntax = "proto3";
 import "pipes.proto";
 import "semantic_doc.proto";
+import "sentence_embeddings_models.proto";
 
 option java_multiple_files = true;
 option java_package = "com.krickert.search.service";
@@ -9,55 +10,121 @@ option objc_class_prefix = "HLW";
 
 package com.krickert.search;
 
+// Service to create embeddings vectors either for a single text or multiple texts.
 service EmbeddingService {
-  rpc createEmbeddingsVector(EmbeddingsVectorRequest) returns (EmbeddingsVectorReply) {}
-  rpc createEmbeddingsVectors(EmbeddingsVectorsRequest) returns (EmbeddingsVectorsReply) {}
+
+  // RPC to create an embeddings vector for a single text.
+  rpc createEmbeddingsVector(EmbeddingsVectorRequest) returns (EmbeddingsVectorReply);
+
+  // RPC to create embeddings vectors for multiple texts.
+  rpc createEmbeddingsVectors(EmbeddingsVectorsRequest) returns (EmbeddingsVectorsReply);
 }
 
+// Message representing a document embedding model.
+message DocumentEmbeddingModel {
+
+  // Oneof field which holds either an embedding type or a custom embedding model URL.
+  oneof model {
+    // The types defined by SentenceEmbeddingType are supported as first class citizens
+    // and validated to work.
+    com.krickert.search.vectorizer.model.SentenceEmbeddingType embedding_type = 1;
+
+    // If you have a modelzoo URL or an S3 bucket for an embedding, you can put it here
+    // and it will follow the DJL library.
+    // See here https://djl.ai/docs/load_model.html#load-model-from-a-url for more details.
+    string embedding_model = 2;
+  }
+}
+
+// Request message to create an embeddings vector.
 message EmbeddingsVectorRequest {
+
+  // The text for which the embeddings vector is to be created.
   string text = 1;
+
+  // The document embedding model to be used for creating the embeddings vector.
+  // defaults to SentenceEmbeddingType.ALL_MINI_L12_V2
+  DocumentEmbeddingModel embedding_model = 2;
 }
 
+// Reply message containing the embeddings vector.
 message EmbeddingsVectorReply {
+
+  // A list of float values representing the embeddings vector.
   repeated float embeddings = 1;
 }
 
+// Request message to create embeddings vectors for multiple texts.
 message EmbeddingsVectorsRequest {
+
+  // A list of texts for which embeddings vectors are to be created.
   repeated string text = 1;
+  // The document embedding model to be used for creating the embeddings vector.
+  // defaults to SentenceEmbeddingType.ALL_MINI_L12_V2
+  DocumentEmbeddingModel embedding_model = 2;
 }
 
+// Reply message containing embeddings vectors for multiple texts.
 message EmbeddingsVectorsReply {
+
+  // A list of EmbeddingsVectorReply messages, each containing an embeddings vector.
   repeated EmbeddingsVectorReply embeddings = 1;
 }
 
+// Options for chunking a text.
 message ChunkOptions {
+
+  // The length of each chunk.
   int32 length = 1;
+
+  // The overlap between consecutive chunks.
   int32 overlap = 2;
 }
 
+// Request message to chunk a text.
 message ChunkRequest {
+
+  // The text to be chunked.
   string text = 1;
+
+  // Options for chunking the text.
   ChunkOptions options = 2;
 }
 
+// Reply message containing chunks of a text.
 message ChunkReply {
+
+  // A list of text chunks.
   repeated string chunks = 1;
 }
 
+// Service to chunk a given text into smaller parts.
 service ChunkService {
-  rpc chunk (ChunkRequest) returns (ChunkReply) {}
+
+  // RPC to chunk a text based on specified options.
+  rpc chunk (ChunkRequest) returns (ChunkReply);
 }
 
+// Service to handle semantic operations on documents.
 service SemanticDocService {
-  rpc embedDocument (SemanticRequest) returns (SemanticReply) {}
+
+  // RPC to embed a document with semantic information.
+  rpc embedDocument (SemanticRequest) returns (SemanticReply);
 }
 
+// Request message for embedding a document with semantic information.
 message SemanticRequest {
+
+  // The document to be embedded with semantic information.
   com.krickert.search.model.pipe.PipeDocument document = 1;
+
+  // Options for chunking the document text before embedding.
   ChunkOptions options = 2;
 }
 
+// Reply message containing the semantically embedded document.
 message SemanticReply {
+
+  // The document embedded with semantic information.
   com.krickert.search.model.semantic.SemanticDocument document = 1;
 }
-

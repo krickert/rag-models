@@ -4,6 +4,7 @@ package com.krickert.search.vectorizer.model;
 
 option java_package = "com.krickert.search.vectorizer";
 option java_outer_classname = "SentenceEmbeddingModelProto";
+option java_multiple_files = true;
 
 import "sentence_embeddings_models.proto";
 import "google/protobuf/timestamp.proto";
@@ -11,20 +12,40 @@ import "google/protobuf/empty.proto";
 
 // Request message for model lookup by type.
 message SentenceEmbeddingModelLookupRequest {
+
+  // Specifies the type of sentence embedding model to look up.
   SentenceEmbeddingType model_type = 1;
 }
 
 // Response message for model lookup.
 message SentenceEmbeddingModelLookupReply {
+
+  // Details of the sentence embedding model found.
   SentenceEmbeddingModelDetails details = 1;
+
+  // The timestamp when the response was generated.
   google.protobuf.Timestamp responseTime = 2;
 }
 
-// Service definition for NLPModelService.
+// Service definition for NLPModelService, which provides operations related to sentence embedding models.
 service SentenceEmbeddingModelService {
-  // RPC to lookup model details by type.
+
+  // RPC to lookup model details based on the provided model type.
+  //
+  // The LookupModel method takes a SentenceEmbeddingModelLookupRequest containing
+  // the type of model to look up and returns a SentenceEmbeddingModelLookupReply
+  // with the details of the model.
+  //
+  // @param SentenceEmbeddingModelLookupRequest request - The request containing the type of model to look up.
+  // @return SentenceEmbeddingModelLookupReply - The response containing the details of the model and a response timestamp.
   rpc LookupModel(SentenceEmbeddingModelLookupRequest) returns (SentenceEmbeddingModelLookupReply);
 
-  // RPC to return all model details.
+  // RPC to return the details of all available sentence embedding models.
+  //
+  // The ListAllModels method takes an empty request and returns a list of
+  // all available sentence embedding models along with their details.
+  //
+  // @param google.protobuf.Empty request - An empty request message.
+  // @return SentenceEmbeddingModels - The response containing the details of all available sentence embedding models.
   rpc ListAllModels(google.protobuf.Empty) returns (SentenceEmbeddingModels);
 }

@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package com.krickert.search.indexer.solr;
+
+option java_package = "com.krickert.search.indexer.grpc";
+option java_outer_classname = "SolrConfigurationProto";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+
+// Message representing the authentication configuration for Solr connection.
+message Authentication {
+
+  // Indicates if authentication is enabled.
+  bool enabled = 1;
+
+  // The type of authentication.
+  string type = 2;
+
+  // The client secret for authentication.
+  string client_secret = 3;
+
+  // The client ID for authentication.
+  string client_id = 4;
+
+  // The issuer URL for authentication.
+  string issuer = 5;
+
+  // The issuer authentication ID.
+  string issuer_auth_id = 6;
+
+  // The subject for authentication.
+  string subject = 7;
+}
+
+// Message representing the connection configuration for Solr.
+message Connection {
+
+  // The URL for Solr connection.
+  string url = 1;
+
+  // The authentication configuration for Solr connection.
+  Authentication authentication = 2;
+
+  // The size of the queue for Solr connection.
+  int32 queue_size = 3;
+
+  // The number of threads for Solr connection.
+  int32 thread_count = 4;
+}
+
+// Message representing the Solr collection creation configuration.
+message SolrCollectionCreationConfig {
+
+  // The file path to the collection configuration file.
+  string collection_config_file = 1;
+
+  // The name of the collection configuration.
+  string collection_config_name = 2;
+
+  // The number of shards for the collection.
+  int32 number_of_shards = 3;
+
+  // The number of replicas for the collection.
+  int32 number_of_replicas = 4;
+}
+
+// Message representing the Solr configuration.
+message SolrConfig {
+
+  // The name of the Solr configuration.
+  string name = 1;
+
+  // The version of the Solr configuration.
+  string version = 2;
+
+  // The collection name of the Solr configuration.
+  string collection = 3;
+
+  // The collection creation configuration.
+  optional SolrCollectionCreationConfig collection_creation = 4;
+
+  // The connection configuration for Solr.
+  Connection connection = 5;
+}
+
+message SolrConfigurationMap {
+  map<string, SolrConfig> configs = 1;
+}
+
+// Service definition for SolrConfigurationService.
+service SolrConfigurationService {
+
+  // RPC to get the Solr configuration properties by ID.
+  rpc GetSolrConfiguration(GetSolrConfigurationRequest) returns (SolrConfig);
+
+  // RPC to update the Solr configuration properties by ID.
+  rpc UpdateSolrConfiguration(UpdateSolrConfigurationRequest) returns (google.protobuf.Empty);
+}
+
+// Message representing the request to get a Solr configuration by ID.
+message GetSolrConfigurationRequest {
+
+  // The ID of the Solr configuration to retrieve.
+  string id = 1;
+}
+// Message representing the request to update a Solr configuration by ID.
+message UpdateSolrConfigurationRequest {
+
+  // The ID of the Solr configuration to update.
+  string id = 1;
+
+  // The Solr configuration properties to update.
+  SolrConfig configuration = 2;
+}
+
+
+
+
