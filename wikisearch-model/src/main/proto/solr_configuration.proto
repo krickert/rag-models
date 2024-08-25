@@ -47,6 +47,9 @@ message Connection {
 
   // The number of threads for Solr connection.
   int32 thread_count = 4;
+
+  // the pagination size for solr source connections
+  optional int32 pagination_size = 5;
 }
 
 // Message representing the Solr collection creation configuration.
