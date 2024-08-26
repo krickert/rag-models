@@ -4,6 +4,7 @@ package com.krickert.search.vectorizer.model;
 
 option java_package = "com.krickert.search.vectorizer";
 option java_outer_classname = "SentenceEmbeddings";
+option java_multiple_files = true;
 
 // Enum containing all models.
 enum SentenceEmbeddingType {
