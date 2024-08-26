@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package com.krickert.search.vectorizer.model;
+
+option java_package = "com.krickert.search.vectorizer";
+option java_outer_classname = "SentenceEmbeddingModelProto";
+
+import "sentence_embeddings_models.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// Request message for model lookup by type.
+message SentenceEmbeddingModelLookupRequest {
+  SentenceEmbeddingType model_type = 1;
+}
+
+// Response message for model lookup.
+message SentenceEmbeddingModelLookupReply {
+  SentenceEmbeddingModelDetails details = 1;
+  google.protobuf.Timestamp responseTime = 2;
+}
+
+// Service definition for NLPModelService.
+service SentenceEmbeddingModelService {
+  // RPC to lookup model details by type.
+  rpc LookupModel(SentenceEmbeddingModelLookupRequest) returns (SentenceEmbeddingModelLookupReply);
+
+  // RPC to return all model details.
+  rpc ListAllModels(google.protobuf.Empty) returns (SentenceEmbeddingModels);
+}

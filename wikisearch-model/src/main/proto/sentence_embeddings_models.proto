@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package com.krickert.search.vectorizer.model;
+
+option java_package = "com.krickert.search.vectorizer";
+option java_outer_classname = "SentenceEmbeddings";
+
+// Enum containing all models.
+enum SentenceEmbeddingType {
+  ALL_MINILM_L12_V2 = 0;
+  E5_BASE_v2 = 1;
+  MSMARCO_MINILM_L_6_V3 = 2;
+  MSMARCO_DISTILBERT_BASE_V4 = 3;
+  PARAPHRASE_MULTILINGUAL_MPNET_BASE_V2 = 4;
+}
+
+// Message to associate enum values with URLs.
+message SentenceEmbeddingModelDetails {
+  SentenceEmbeddingType model_type = 1;
+  string model_name = 2;
+  string url = 3;
+}
+
+// Message containing the list of all models with their details.
+message SentenceEmbeddingModels {
+  repeated SentenceEmbeddingModelDetails models = 1;
+}
+
+
+
