@@ -2,6 +2,7 @@ syntax = "proto3";
 import "pipes.proto";
 import "semantic_doc.proto";
 import "sentence_embeddings_models.proto";
+import "health_check.proto";
 
 option java_multiple_files = true;
 option java_package = "com.krickert.search.service";
@@ -18,7 +19,32 @@ service EmbeddingService {
 
   // RPC to create embeddings vectors for multiple texts.
   rpc createEmbeddingsVectors(EmbeddingsVectorsRequest) returns (EmbeddingsVectorsReply);
+
+  // RPC to check the health of the EmbeddingService.
+  rpc check (com.krickert.search.health.HealthCheckRequest) returns (com.krickert.search.health.HealthCheckReply);
 }
+
+// Service to chunk a given text into smaller parts.
+service ChunkService {
+
+  // RPC to chunk a text based on specified options.
+  rpc chunk (ChunkRequest) returns (ChunkReply);
+
+  // RPC to check the health of the ChunkService.
+  rpc check (com.krickert.search.health.HealthCheckRequest) returns (com.krickert.search.health.HealthCheckReply);
+}
+
+// Service to handle semantic operations on documents.
+service SemanticDocService {
+
+  // RPC to embed a document with semantic information.
+  rpc embedDocument (SemanticRequest) returns (SemanticReply);
+
+  // RPC to check the health of the SemanticDocService.
+  rpc check (com.krickert.search.health.HealthCheckRequest) returns (com.krickert.search.health.HealthCheckReply);
+}
+
+
 
 // Message representing a document embedding model.
 message DocumentEmbeddingModel {
@@ -59,6 +85,7 @@ message EmbeddingsVectorsRequest {
 
   // A list of texts for which embeddings vectors are to be created.
   repeated string text = 1;
+
   // The document embedding model to be used for creating the embeddings vector.
   // defaults to SentenceEmbeddingType.ALL_MINI_L12_V2
   DocumentEmbeddingModel embedding_model = 2;
@@ -96,20 +123,6 @@ message ChunkReply {
 
   // A list of text chunks.
   repeated string chunks = 1;
-}
-
-// Service to chunk a given text into smaller parts.
-service ChunkService {
-
-  // RPC to chunk a text based on specified options.
-  rpc chunk (ChunkRequest) returns (ChunkReply);
-}
-
-// Service to handle semantic operations on documents.
-service SemanticDocService {
-
-  // RPC to embed a document with semantic information.
-  rpc embedDocument (SemanticRequest) returns (SemanticReply);
 }
 
 // Request message for embedding a document with semantic information.
