@@ -31,6 +31,18 @@ message Authentication {
 
   // The subject for authentication.
   string subject = 7;
+
+  // the user name for basic auth
+  string user_name = 8;
+
+  // the password for basic auth
+  string password = 9;
+
+  // some auth servers (like an okta dev account) require dpop proof in the http header
+  bool require_dpop = 10;
+
+  // scope to request when contacting the oath server
+  string scope = 11;
 }
 
 // Message representing the connection configuration for Solr.
