@@ -97,6 +97,12 @@ message SolrConfig {
 
   // The connection configuration for Solr.
   Connection connection = 5;
+
+  // the filters to be added
+  repeated string filters = 6;
+
+  // the row number to start indexing from (in case of a previous failure)
+  int64 start = 7;
 }
 
 message SolrConfigurationMap {

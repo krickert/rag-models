@@ -49,7 +49,10 @@ message VectorConfig {
   optional HnswOptions hnsw_options = 7;
 
   // The vector collection creation configuration.
-  com.krickert.search.indexer.solr.SolrCollectionCreationConfig collection_creation = 9;
+  com.krickert.search.indexer.solr.SolrCollectionCreationConfig collection_creation = 8;
+
+  // The maximum size of the chunk field
+  int32 max_chars = 9;
 }
 
 // Message representing the request to get a vector configuration by ID.
