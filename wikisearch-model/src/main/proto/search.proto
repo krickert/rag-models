@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.krickert.search.api";
+option java_outer_classname = "Search";
+option objc_class_prefix = "HLW";
+
+package com.krickert.search;
+
+service SearchService {
+  rpc send (SearchRequest) returns (SearchReply) {}
+}
+
+message SearchReply {
+  repeated SearchResult results = 1;
+  int64 totalNumberOfResults = 2;
+  int32 pageNumber = 3;
+  int32 pageSize = 4;
+  string sortField = 5;
+  string sortDirection = 6;  // ASC or DESC
+  FacetResult facetResult = 7;
+  string errorMessage = 8;  // Field for error message if search fails
+}
+
+message FacetResult {
+  repeated Facet facets = 1;
+}
+
+message Facet {
+  string facet = 1;
+  int64 facetCount = 2;
+}
+
+message SearchResult {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+  string url = 4;
+  string snippet = 5;
+}
+
+message SearchRequest {
+  string query = 1;
+  optional QueryOptions queryOptions = 2;
+  optional QueryStrategy queryStrategy = 3;
+}
+
+message QueryOptions {
+  string username = 1;
+  repeated string filterQuery = 2;
+  repeated SortOption sortOptions = 3;  // Allow multiple sort options
+  FacetQuery facetQuery = 4;
+  bool highlightSnippets = 5;  // Option to highlight snippets
+  int32 pageNumber = 6;
+  int32 pageSize = 7;
+}
+
+message SortOption {
+  string field = 1;
+  string direction = 2;  // ASC or DESC
+}
+
+message FacetQuery {
+  string query = 1;
+}
+
+enum QueryStrategy {
+  SEMANTIC = 0;
+  KEYWORD = 1;
+  KEYWORD_BOOST_SEMANTIC = 3;
+  SEMANTIC_BOOST_KEYWORD = 4;
+}
