@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package com.krickert.search.api;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+// Enums for Search Strategy
+enum SearchStrategy {
+  SEMANTIC = 0;
+  KEYWORD = 1;
+  KEYWORD_BOOST_SEMANTIC = 2;
+  SEMANTIC_BOOST_KEYWORD = 3;
+}
+
+// Request message for search queries
+message SearchRequest {
+  string query = 1;                   // The search query
+  int32 start = 2;                    // The starting index for results
+  int32 numResults = 3;               // Number of results to be returned
+  repeated string filterQueries = 4;  // Filter queries for refining search
+  string sortBy = 5;                  // Field to sort by
+  string sortOrder = 6;               // Sort order (asc/desc)
+  repeated string facetFields = 7;    // Fields to facet on
+  SearchStrategy strategy = 8;        // Search strategy to be used
+}
+
+// Response message for search results
+message SearchResult {
+  string id = 1;                      // Document ID
+  string title = 2;                   // Document title
+  string snippet = 3;                 // A snippet of the document content
+  repeated string matchedText = 4;    // Text that matched from vectors
+}
+
+// Facet result
+message FacetResult {
+  string facet = 1;                   // Facet value
+  int64 facetCount = 2;               // Count for the facet value
+}
+
+// Search Results including facets
+message SearchResponse {
+  repeated SearchResult results = 1;          // Search results
+  map<string, FacetResult> facets = 2;        // Facet information
+  int64 totalResults = 3;                     // Total number of results
+  int32 qTime = 4;                            // Time in milliseconds to perform the search
+  google.protobuf.Timestamp timeOfSearch = 5; // Time the search was performed
+}
+
+// The search service definition
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}

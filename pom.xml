@@ -51,8 +51,8 @@
     </distributionManagement>
 
     <modules>
-        <module>wikisearch-model</module>
-        <module>wikisearch-model-test-resources</module>
+        <module>search-models</module>
+        <module>search-models-test-resources</module>
     </modules>
 
     <dependencies>
