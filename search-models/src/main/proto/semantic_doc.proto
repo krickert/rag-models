@@ -2,7 +2,6 @@ syntax = "proto3";
 package com.krickert.search.model.semantic;
 option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
 import "pipes.proto";
 
 message SementicEmbedding {

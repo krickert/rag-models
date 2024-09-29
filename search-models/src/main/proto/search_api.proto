@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package com.krickert.search.api;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+// Enums for Search Strategy
+enum SearchStrategy {
+  SEMANTIC = 0;
+  KEYWORD = 1;
+  KEYWORD_BOOST_SEMANTIC = 2;
+  SEMANTIC_BOOST_KEYWORD = 3;
+}
+
+enum SortType {
+  FIELD = 0;
+  SCORE = 1;
+}
+
+enum SortOrder {
+  ASC = 0;
+  DESC = 1;
+}
+
+message SortOptions {
+  SortType sortType = 1;
+  SortOrder sortOrder = 2;
+  optional string sortField = 3;
+}
+
+message FacetField {
+  string field = 1;
+  optional int32 limit = 2;              // Limit the number of facets returned
+  optional bool missing = 3;             // Include counts for missing fields
+  optional string prefix = 4;            // Limit to facets starting with a prefix
+}
+
+message FacetRange {
+  string field = 1;
+  optional string start = 2;             // Range start value
+  optional string end = 3;               // Range end value
+  optional string gap = 4;               // Gap for range segmentation
+  optional bool hardend = 5;             // Force end of range to be the given end
+  optional string other = 6;             // Indicate additional counts like before, after, and between
+}
+
+message FacetQuery {
+  string query = 1;                       // Facet query string
+}
+
+// Request message for search queries
+message SearchRequest {
+  string query = 1;                       // The search query
+  int32 start = 2;                        // The starting index for results
+  int32 numResults = 3;                   // Number of results to be returned
+  repeated string filterQueries = 4;      // Filter queries for refining search
+  SortOptions sort = 5;                   // Options to sort by
+  repeated FacetField facetFields = 6;    // Fields to facet on
+  repeated FacetRange facetRanges = 7;    // Range facets
+  repeated FacetQuery facetQueries = 8;   // Query facets
+  SearchStrategy strategy = 9;            // Search strategy to be used
+  optional int32 kValue = 10;             // the semantic search k value to use
+}
+
+// Response message for search results
+message SearchResult {
+  string id = 1;                          // Document ID
+  string title = 2;                       // Document title
+  string snippet = 3;                     // A snippet of the document content
+  repeated string matchedText = 4;        // Text that matched from vectors
+}
+
+// Facet result
+message FacetResult {
+  string facet = 1;                       // Facet value
+  int64 facetCount = 2;                   // Count for the facet value
+}
+
+// Search Results including facets
+message SearchResponse {
+  repeated SearchResult results = 1;      // Search results
+  map<string, FacetResult> facets = 2;    // Facet information
+  int64 totalResults = 3;                 // Total number of results
+  int32 qTime = 4;                        // Time in milliseconds to perform the search
+  google.protobuf.Timestamp timeOfSearch = 5; // Time the search was performed
+}
+
+// The search service definition
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}

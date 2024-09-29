@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package com.krickert.search.indexer;
+
+option java_package = "com.krickert.search.indexer.grpc";
+option java_outer_classname = "IndexerConfigurationProto";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+
+// Message representing the source seed data configuration.
+message SourceSeedData {
+
+  // Indicates whether the source seed data is enabled.
+  bool enabled = 1;
+
+  // The file path to the seed JSON file.
+  string seed_json_file = 2;
+}
+
+// Message representing the indexer configuration properties.
+message IndexerConfiguration {
+
+  // The gRPC channel for the vector service.
+  string vector_grpc_channel = 1;
+
+  // The gRPC channel for the chunker service.
+  string chunker_grpc_channel = 2;
+
+  // The source seed data configuration.
+  SourceSeedData source_seed_data = 3;
+}
+
+// Message representing the request to get a configuration by ID.
+message GetIndexerConfigurationRequest {
+
+  // The ID of the configuration to retrieve.
+  string id = 1;
+}
+
+// Message representing the request to update a configuration by ID.
+message UpdateIndexerConfigurationRequest {
+
+  // The ID of the configuration to update.
+  string id = 1;
+
+  // The configuration properties to update.
+  IndexerConfiguration configuration = 2;
+}
+
+// Service definition for IndexerConfigurationService.
+service IndexerConfigurationService {
+
+  // RPC to get the indexer configuration properties by ID.
+  rpc GetIndexerConfiguration(GetIndexerConfigurationRequest) returns (IndexerConfiguration);
+
+  // RPC to update the indexer configuration properties by ID.
+  rpc UpdateIndexerConfiguration(UpdateIndexerConfigurationRequest) returns (google.protobuf.Empty);
+}

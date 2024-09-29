@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package com.krickert.search.indexer.vector;
+
+option java_package = "com.krickert.search.indexer.grpc";
+option java_outer_classname = "VectorConfigurationProto";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "semantic_doc_service.proto";
+import "solr_configuration.proto";
+
+
+enum SimilarityFunction {
+  COSINE = 0;
+  DOT_PRODUCT = 1;
+  EUCLIDEAN = 2;
+}
+
+message HnswOptions {
+  // The maximum number of HNSW connections.
+  int32 hnsw_max_connections = 1;
+
+  // The beam width for HNSW.
+  int32 hnsw_beam_width = 2;
+}
+
+// Message representing the vector configuration.
+message VectorConfig {
+
+  // options to chunk from the chunker request service
+  optional ChunkOptions chunk_options = 1;
+
+  // Indicates whether chunk field is enabled. defaults to false
+  bool chunk_field = 2;
+
+  // the embedding model to use.  Defaults to ALL_MINILM_L12_V2
+  optional DocumentEmbeddingModel embedding_model = 3;
+
+  // The destination collection name. Only used if chunk_field is true. will create the child collection
+  string destination_collection = 4;
+
+  // The name of the chunk field vector.
+  string chunk_field_vector_name = 5;
+
+  // The similarity function.  supports cosine, dot_product, and euclidean.  Defaults to cosine
+  optional SimilarityFunction similarity_function = 6;
+
+  optional HnswOptions hnsw_options = 7;
+
+  // The vector collection creation configuration.
+  com.krickert.search.indexer.solr.SolrCollectionCreationConfig collection_creation = 8;
+
+  // The maximum size of the chunk field
+  int32 max_chars = 9;
+}
+
+// Message representing the request to get a vector configuration by ID.
+message GetVectorConfigRequest {
+
+  // The ID of the vector configuration to retrieve.
+  string id = 1;
+}
+
+// Message representing the request to update a vector configuration by ID.
+message UpdateVectorConfigRequest {
+
+  // The ID of the vector configuration to update.
+  string id = 1;
+
+  // The vector configuration properties to update.
+  VectorConfig configuration = 2;
+}
+
+// Service definition for VectorConfigService.
+service VectorConfigService {
+
+  // RPC to get the vector configuration properties by ID.
+  rpc GetVectorConfig(GetVectorConfigRequest) returns (VectorConfig);
+
+  // RPC to update the vector configuration properties by ID.
+  rpc UpdateVectorConfig(UpdateVectorConfigRequest) returns (google.protobuf.Empty);
+}

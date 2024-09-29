@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.krickert.search.service";
+option java_outer_classname = "HealthCheck";
+option objc_class_prefix = "HLW";
+
+package com.krickert.search.health;
+
+// Message for health check request.
+
+message HealthCheckRequest {}
+
+// Message for health check reply.
+message HealthCheckReply {
+  string status = 1;
+  float timerRunning = 2;
+  string serverName = 3;
+}
