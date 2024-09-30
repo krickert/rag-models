@@ -50,18 +50,56 @@ message FacetQuery {
   string query = 1;                       // Facet query string
 }
 
+message Param {
+  string field = 1;
+  string value = 2;
+}
+
+message Params {
+  repeated Param parameter = 1;
+}
+
+// The preFilter parameter can be specified explicitly to reduce the number of
+// candidate documents evaluated for the distance calculation
+// example inStock:true where "instock" is the field and "true" would be the value
+message PreFilter {
+  string field = 1;
+  string value = 2;
+}
+// The vectorSimilarity vector similarity query parser matches documents
+// whose similarity with the target vector is a above a minimum threshold.
+// see https://solr.apache.org/guide/solr/latest/query-guide/dense-vector-search.html
+message VectorSimilarity {
+  // Minimum similarity threshold of nodes in the graph to be returned as matches
+  // if not specified, defaults to "none"
+  optional float minReturn = 1;
+  // Minimum similarity of nodes in the graph to continue traversal of their neighbors
+  // if not specified defaults to -infinity
+  optional float minTraverse = 2;
+  // The preFilter parameter can be specified explicitly to reduce the number of
+  // candidate documents evaluated for the distance calculation:
+  optional PreFilter prefilter = 3;
+}
+
+message SemanticOptions {
+  optional int32 topK = 1;
+  VectorSimilarity vectorSimilarity = 2;
+  repeated string includeTags = 3;
+  repeated string excludeTags = 4;
+}
+
 // Request message for search queries
 message SearchRequest {
   string query = 1;                       // The search query
-  int32 start = 2;                        // The starting index for results
-  int32 numResults = 3;                   // Number of results to be returned
+  optional int32 start = 2;                        // The starting index for results
+  optional int32 numResults = 3;                   // Number of results to be returned
   repeated string filterQueries = 4;      // Filter queries for refining search
-  SortOptions sort = 5;                   // Options to sort by
+  optional SortOptions sort = 5;                   // Options to sort by
   repeated FacetField facetFields = 6;    // Fields to facet on
   repeated FacetRange facetRanges = 7;    // Range facets
   repeated FacetQuery facetQueries = 8;   // Query facets
   SearchStrategy strategy = 9;            // Search strategy to be used
-  optional int32 kValue = 10;             // the semantic search k value to use
+  optional Params additionalParams = 11;  // additional params to append to the search
 }
 
 // Response message for search results
@@ -87,7 +125,15 @@ message SearchResponse {
   google.protobuf.Timestamp timeOfSearch = 5; // Time the search was performed
 }
 
+message DevRequest {
+  map<string, string> requestParams = 1;
+  // the basic defaults are defined in the config
+  bool useBasicDefaults = 2;
+}
+
 // The search service definition
 service SearchService {
   rpc Search(SearchRequest) returns (SearchResponse);
+  rpc DeveloperSearch(DevRequest) returns (SearchResponse);
 }
+
