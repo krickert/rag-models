@@ -1,19 +1,12 @@
 syntax = "proto3";
+option java_outer_classname = "SearchApiProto";
+option java_multiple_files = true;
 
 package com.krickert.search.api;
 
-option java_multiple_files = true;
-
 import "google/protobuf/timestamp.proto";
 
-// Enums for Search Strategy
-enum SearchStrategy {
-  SEMANTIC = 0;
-  KEYWORD = 1;
-  KEYWORD_BOOST_SEMANTIC = 2;
-  SEMANTIC_BOOST_KEYWORD = 3;
-}
-
+// Enums for search strategy
 enum SortType {
   FIELD = 0;
   SCORE = 1;
@@ -27,27 +20,63 @@ enum SortOrder {
 message SortOptions {
   SortType sortType = 1;
   SortOrder sortOrder = 2;
-  optional string sortField = 3;
+  optional string sortField = 3;  // Field to sort on, required if sortType is FIELD
 }
 
 message FacetField {
   string field = 1;
-  optional int32 limit = 2;              // Limit the number of facets returned
-  optional bool missing = 3;             // Include counts for missing fields
-  optional string prefix = 4;            // Limit to facets starting with a prefix
+  optional int32 limit = 2;        // Limit the number of facets returned
+  optional bool missing = 3;       // Include counts for missing fields
+  optional string prefix = 4;      // Limit to facets starting with a prefix
 }
 
 message FacetRange {
   string field = 1;
-  optional string start = 2;             // Range start value
-  optional string end = 3;               // Range end value
-  optional string gap = 4;               // Gap for range segmentation
-  optional bool hardend = 5;             // Force end of range to be the given end
-  optional string other = 6;             // Indicate additional counts like before, after, and between
+  optional string start = 2;       // Range start value
+  optional string end = 3;         // Range end value
+  optional string gap = 4;         // Gap for range segmentation
+  optional bool hardend = 5;       // Force end of range to be the given end
+  optional string other = 6;       // Additional counts: before, after, between
 }
 
 message FacetQuery {
-  string query = 1;                       // Facet query string
+  string query = 1;               // Facet query string
+}
+
+// Filters for keyword-based or vector-based search
+message Filter {
+  string field = 1;
+  string value = 2;
+}
+
+// Similarity options used for vector-based searches
+message SimilarityOptions {
+  optional float minReturn = 1;         // Minimum similarity for return, defaults to 1
+  optional float minTraverse = 2;       // Minimum similarity to traverse neighbors, defaults to -infinity
+  repeated Filter preFilter = 3;        // Pre-filter for candidate documents
+}
+
+// Parameters for a semantic vector search
+message SemanticOptions {
+  optional int32 topK = 1;              // Maximum number of top results
+  SimilarityOptions similarity = 2;     // Vector similarity configuration
+  repeated string includeTags = 3;      // Tags to include
+  repeated string excludeTags = 4;      // Tags to exclude
+  repeated string vectorFields = 5;     // Names of vector fields to use
+}
+
+
+// Parameters for keyword-based searches
+message KeywordOptions {
+  optional bool boostWithSemantic = 1;  // Boost the results using semantic scoring
+}
+
+// Combined search strategies, one-of defines that only one type of search is valid
+message SearchStrategyOptions {
+  oneof search_strategy {
+    SemanticOptions semantic = 1;
+    KeywordOptions keyword = 2;
+  }
 }
 
 message Param {
@@ -56,79 +85,50 @@ message Param {
 }
 
 message Params {
-  repeated Param parameter = 1;
+  repeated Param param = 1;
 }
 
-// The preFilter parameter can be specified explicitly to reduce the number of
-// candidate documents evaluated for the distance calculation
-// example inStock:true where "instock" is the field and "true" would be the value
-message PreFilter {
-  string field = 1;
-  string value = 2;
-}
-// The vectorSimilarity vector similarity query parser matches documents
-// whose similarity with the target vector is a above a minimum threshold.
-// see https://solr.apache.org/guide/solr/latest/query-guide/dense-vector-search.html
-message VectorSimilarity {
-  // Minimum similarity threshold of nodes in the graph to be returned as matches
-  // if not specified, defaults to "none"
-  optional float minReturn = 1;
-  // Minimum similarity of nodes in the graph to continue traversal of their neighbors
-  // if not specified defaults to -infinity
-  optional float minTraverse = 2;
-  // The preFilter parameter can be specified explicitly to reduce the number of
-  // candidate documents evaluated for the distance calculation:
-  optional PreFilter prefilter = 3;
-}
-
-message SemanticOptions {
-  optional int32 topK = 1;
-  VectorSimilarity vectorSimilarity = 2;
-  repeated string includeTags = 3;
-  repeated string excludeTags = 4;
-}
-
-// Request message for search queries
+// Search request for all search types
 message SearchRequest {
-  string query = 1;                       // The search query
-  optional int32 start = 2;                        // The starting index for results
-  optional int32 numResults = 3;                   // Number of results to be returned
-  repeated string filterQueries = 4;      // Filter queries for refining search
-  optional SortOptions sort = 5;                   // Options to sort by
-  repeated FacetField facetFields = 6;    // Fields to facet on
-  repeated FacetRange facetRanges = 7;    // Range facets
-  repeated FacetQuery facetQueries = 8;   // Query facets
-  SearchStrategy strategy = 9;            // Search strategy to be used
-  optional Params additionalParams = 11;  // additional params to append to the search
+  string query = 1;                           // Search query string
+  optional int32 start = 2;                   // Start index for paging
+  optional int32 numResults = 3;              // Number of results to return
+  repeated string filterQueries = 4;          // Filter queries to refine search
+  optional SortOptions sort = 5;              // Sorting options
+  repeated FacetField facetFields = 6;        // Fields to facet on
+  repeated FacetRange facetRanges = 7;        // Range facets
+  repeated FacetQuery facetQueries = 8;       // Query facets
+  SearchStrategyOptions strategy = 9;         // Search strategy options
+  optional Params additionalParams = 11;      // Additional parameters to append to the search
 }
 
-// Response message for search results
 message SearchResult {
-  string id = 1;                          // Document ID
-  string title = 2;                       // Document title
-  string snippet = 3;                     // A snippet of the document content
-  repeated string matchedText = 4;        // Text that matched from vectors
+  string id = 1;                         // Document ID
+  string snippet = 3;                    // A snippet of the document content
+  repeated string matchedText = 4;       // Text matched by vectors or keyword
+  map<string, string> fields = 5;        // Additional fields from the document
 }
 
-// Facet result
+
+// Facet result for returned facet data
 message FacetResult {
-  string facet = 1;                       // Facet value
-  int64 facetCount = 2;                   // Count for the facet value
+  string facet = 1;                      // Facet value
+  int64 facetCount = 2;                  // Count for the facet value
 }
 
-// Search Results including facets
+// Response message for search results, including facets and metadata
 message SearchResponse {
-  repeated SearchResult results = 1;      // Search results
-  map<string, FacetResult> facets = 2;    // Facet information
-  int64 totalResults = 3;                 // Total number of results
-  int32 qTime = 4;                        // Time in milliseconds to perform the search
-  google.protobuf.Timestamp timeOfSearch = 5; // Time the search was performed
+  repeated SearchResult results = 1;     // Search results
+  map<string, FacetResult> facets = 2;   // Facet information
+  int64 totalResults = 3;                // Total number of results
+  int32 qTime = 4;                       // Time taken to perform the search in ms
+  google.protobuf.Timestamp timeOfSearch = 5;  // Time of the search
 }
 
+// Request for developer/test cases
 message DevRequest {
-  map<string, string> requestParams = 1;
-  // the basic defaults are defined in the config
-  bool useBasicDefaults = 2;
+  map<string, string> requestParams = 1; // Custom request params for testing
+  bool useBasicDefaults = 2;             // Use defaults from configuration
 }
 
 // The search service definition
@@ -136,4 +136,3 @@ service SearchService {
   rpc Search(SearchRequest) returns (SearchResponse);
   rpc DeveloperSearch(DevRequest) returns (SearchResponse);
 }
-
