@@ -30,27 +30,6 @@ message SortOptions {
   optional string sortField = 3;  // Field to sort on, required if sortType is FIELD
 }
 
-// Facet configurations
-message FacetField {
-  string field = 1;
-  optional int32 limit = 2;        // Limit the number of facets returned
-  optional bool missing = 3;       // Include counts for missing fields
-  optional string prefix = 4;      // Limit to facets starting with a prefix
-}
-
-message FacetRange {
-  string field = 1;
-  optional string start = 2;       // Range start value
-  optional string end = 3;         // Range end value
-  optional string gap = 4;         // Gap for range segmentation
-  optional bool hardend = 5;       // Force end of range to be the given end
-  optional string other = 6;       // Additional counts: before, after, between
-}
-
-message FacetQuery {
-  string query = 1;               // Facet query string
-}
-
 // Filters for keyword-based or vector-based search
 message Filter {
   string field = 1;
@@ -87,16 +66,6 @@ message SearchStrategyOptions {
   KeywordOptions keyword = 3;
 }
 
-// Additional parameters for search
-message Param {
-  string field = 1;
-  string value = 2;
-}
-
-message Params {
-  repeated Param param = 1;
-}
-
 // Highlighting options
 message HighlightOptions {
   repeated string fields = 1;         // Fields to apply highlighting
@@ -107,9 +76,55 @@ message HighlightOptions {
   bool semanticHighlight = 6;         // Whether to apply semantic-specific highlighting
 }
 
+// FieldList for inclusion and exclusion
 message FieldList {
   repeated string inclusionFields = 1;
   repeated string exclusionFields = 2;
+}
+
+// Unified FacetRequest using oneof
+message FacetRequest {
+  oneof facet_type {
+    FacetField facetField = 1;
+    FacetRange facetRange = 2;
+    FacetQuery facetQuery = 3;
+  }
+}
+
+// Facet configurations
+message FacetField {
+  string field = 1;
+  optional int32 limit = 2;        // Limit the number of facets returned
+  optional bool missing = 3;       // Include counts for missing fields
+  optional string prefix = 4;      // Limit to facets starting with a prefix
+}
+
+message FacetRange {
+  string field = 1;
+  optional string start = 2;       // Range start value
+  optional string end = 3;         // Range end value
+  optional string gap = 4;         // Gap for range segmentation
+  optional bool hardend = 5;       // Force end of range to be the given end
+  optional string other = 6;       // Additional counts: before, after, between
+}
+
+message FacetQuery {
+  string query = 1;               // Facet query string
+}
+
+// Wrapper for multiple FacetResults
+message FacetResults {
+  repeated FacetResult results = 1; // List of facet results for a facet field
+}
+
+// Additional parameters for search
+message Param {
+  string field = 1;
+  string value = 2;
+}
+
+message Params {
+  repeated Param param = 1;
 }
 
 // Search request encompassing all search parameters
@@ -119,9 +134,7 @@ message SearchRequest {
   optional int32 numResults = 3;              // Number of results to return
   repeated string filterQueries = 4;          // Filter queries to refine search
   optional SortOptions sort = 5;              // Sorting options
-  repeated FacetField facetFields = 6;        // Fields to facet on
-  repeated FacetRange facetRanges = 7;        // Range facets
-  repeated FacetQuery facetQueries = 8;       // Custom facet queries
+  repeated FacetRequest facetRequests = 6;    // Unified facet requests
   SearchStrategyOptions strategy = 9;         // Search strategy options
   optional Params additionalParams = 11;      // Additional parameters to append to the search
   optional HighlightOptions highlightOptions = 12; // Highlighting preferences
@@ -144,11 +157,11 @@ message FacetResult {
 
 // Response message for search results, including facets and metadata
 message SearchResponse {
-  repeated SearchResult results = 1;     // Search results
-  map<string, FacetResult> facets = 2;   // Facet information
-  int64 totalResults = 3;                // Total number of results
-  int32 qTime = 4;                       // Time taken to perform the search in ms
-  google.protobuf.Timestamp timeOfSearch = 5;  // Time of the search
+  repeated SearchResult results = 1;                     // Search results
+  map<string, FacetResults> facets = 2;                   // Facet information mapped to their results
+  int64 totalResults = 3;                                  // Total number of results
+  int32 qTime = 4;                                         // Time taken to perform the search in ms
+  google.protobuf.Timestamp timeOfSearch = 5;              // Time of the search
 }
 
 // Request for developer/test cases
