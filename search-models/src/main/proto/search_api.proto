@@ -23,6 +23,12 @@ enum LogicalOperator {
   OR = 1;
 }
 
+enum StrategyType {
+  KEYWORD = 0;
+  SEMANTIC = 1;
+  // Add more strategy types as needed
+}
+
 // Sort options for search results
 message SortOptions {
   SortType sortType = 1;
@@ -55,15 +61,28 @@ message SemanticOptions {
 // Parameters for keyword-based searches
 message KeywordOptions {
   optional bool boostWithSemantic = 1;  // Boost the results using semantic scoring
+  // Additional boosting options can be added here
+}
+
+// Encapsulates a single search strategy
+message SearchStrategy {
+  StrategyType type = 1; // Type of the strategy (e.g., KEYWORD, SEMANTIC)
+
+  oneof strategy_options {
+    SemanticOptions semantic = 2;
+    KeywordOptions keyword = 3;
+    // Add more options for new strategies here
+  }
+
+  // Optional boost factor for the strategy
+  optional float boost = 4; // Default boost is 1.0 if not specified
 }
 
 // Combined search strategies with logical operator
 message SearchStrategyOptions {
   LogicalOperator operator = 1; // How to combine multiple strategies (AND/OR)
 
-  // Optional search strategies
-  SemanticOptions semantic = 2;
-  KeywordOptions keyword = 3;
+  repeated SearchStrategy strategies = 2; // List of search strategies
 }
 
 // Highlighting options
@@ -135,7 +154,7 @@ message SearchRequest {
   repeated string filterQueries = 4;          // Filter queries to refine search
   optional SortOptions sort = 5;              // Sorting options
   repeated FacetRequest facetRequests = 6;    // Unified facet requests
-  SearchStrategyOptions strategy = 9;         // Search strategy options
+  optional SearchStrategyOptions strategy = 9;         // Updated search strategy options
   optional Params additionalParams = 11;      // Additional parameters to append to the search
   optional HighlightOptions highlightOptions = 12; // Highlighting preferences
   optional FieldList fieldList = 13;
