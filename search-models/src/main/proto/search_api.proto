@@ -73,10 +73,10 @@ message SearchStrategy {
     KeywordOptions keyword = 3;
     // Add more options for new strategies here
   }
-
   // Optional boost factor for the strategy
   optional float boost = 4; // Default boost is 1.0 if not specified
 }
+
 
 // Combined search strategies with logical operator
 message SearchStrategyOptions {
@@ -155,6 +155,7 @@ message SearchRequest {
   optional SortOptions sort = 5;              // Sorting options
   repeated FacetRequest facetRequests = 6;    // Unified facet requests
   optional SearchStrategyOptions strategy = 9;         // Updated search strategy options
+  optional SearchStrategyOptions boostQueries = 10; //boost queries for relevancy.  uses the bq in edismax
   optional Params additionalParams = 11;      // Additional parameters to append to the search
   optional HighlightOptions highlightOptions = 12; // Highlighting preferences
   optional FieldList fieldList = 13;
