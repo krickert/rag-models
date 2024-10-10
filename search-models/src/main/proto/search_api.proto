@@ -19,8 +19,8 @@ enum SortOrder {
 }
 
 enum LogicalOperator {
-  AND = 0;
-  OR = 1;
+  OR = 0;
+  AND = 1;
 }
 
 enum StrategyType {
@@ -37,6 +37,7 @@ message SortOptions {
 }
 
 // Filters for keyword-based or vector-based search
+// these will add be added as static fq=field:value to the query itself
 message Filter {
   string field = 1;
   string value = 2;
@@ -60,7 +61,10 @@ message SemanticOptions {
 
 // Parameters for keyword-based searches
 message KeywordOptions {
-  optional bool boostWithSemantic = 1;  // Boost the results using semantic scoring
+  optional string queryTextOverride = 1; // the query text if we do not want this text to be the initial query
+  optional LogicalOperator keywordLogicalOperator = 2; // set the default keyword match operator for each keywords "must include all
+  // words" would be AND while "math on any or all words" would be the OR part.
+  repeated string overrideFieldsToQuery = 3;// for this particular set of options, use this set of fields instead
   // Additional boosting options can be added here
 }
 
@@ -81,7 +85,6 @@ message SearchStrategy {
 // Combined search strategies with logical operator
 message SearchStrategyOptions {
   LogicalOperator operator = 1; // How to combine multiple strategies (AND/OR)
-
   repeated SearchStrategy strategies = 2; // List of search strategies
 }
 
@@ -133,7 +136,8 @@ message FacetQuery {
 
 // Wrapper for multiple FacetResults
 message FacetResults {
-  repeated FacetResult results = 1; // List of facet results for a facet field
+  string facetField = 1; //the name of the facet field
+  repeated FacetResult results = 2; // List of facet results for a facet field
 }
 
 // Additional parameters for search
