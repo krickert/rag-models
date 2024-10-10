@@ -6,6 +6,7 @@ option java_multiple_files = true;
 package com.krickert.search.api;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 // Enums for search strategy
 enum SortType {
@@ -88,14 +89,17 @@ message SearchStrategyOptions {
   repeated SearchStrategy strategies = 2; // List of search strategies
 }
 
+
 // Highlighting options
 message HighlightOptions {
-  repeated string fields = 1;         // Fields to apply highlighting
-  string preTag = 2;                  // Tag to prepend to highlighted terms (e.g., <em>)
-  string postTag = 3;                 // Tag to append to highlighted terms (e.g., </em>)
-  int32 snippetCount = 4;             // Number of snippets per field
-  int32 snippetSize = 5;              // Size of each snippet in characters
-  bool semanticHighlight = 6;         // Whether to apply semantic-specific highlighting
+  repeated string fields = 1;                  // Fields to apply highlighting (hl.fl)
+  optional string preTag = 2;                  // Tag to prepend to highlighted terms (e.g., <em>)
+  optional string postTag = 3;                 // Tag to append to highlighted terms (e.g., </em>)
+  optional int32 snippetCount = 4;             // Number of snippets per field
+  optional int32 snippetSize = 5;              // Size of each snippet in characters
+  optional bool semanticHighlight = 6;         // Whether to apply semantic-specific highlighting
+  optional bool offsets = 7;                   // Return highlighting offsets in the document metadata
+  optional string queryOverride = 9;           // Highlight query to use, would replace default
 }
 
 // FieldList for inclusion and exclusion
@@ -165,12 +169,28 @@ message SearchRequest {
   optional FieldList fieldList = 13;
 }
 
+message Strings {
+  repeated string keyword = 1;
+}
+
+message DocMetadata {
+  repeated int32 pageNumbers = 1;
+  optional string docType = 2;
+  optional string extension = 3;
+  optional google.protobuf.Timestamp lastUpdated = 4;
+  optional google.protobuf.Timestamp dateCreated = 5;
+  optional Strings keywords = 6;
+  optional Strings categories = 7;
+  optional string source = 8;
+}
+
 // Individual search result
 message SearchResult {
   string id = 1;                         // Document ID
   string snippet = 3;                    // A snippet of the document content with highlights
   repeated string matchedText = 4;       // Text matched by vectors or keyword
-  map<string, string> fields = 5;        // Additional fields from the document
+  google.protobuf.Struct fields = 5;     // Additional fields from the document
+  optional DocMetadata metadata = 6;     // misc doc metadata
 }
 
 // Facet result for returned facet data
