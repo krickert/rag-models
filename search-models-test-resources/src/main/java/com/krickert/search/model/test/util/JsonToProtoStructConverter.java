@@ -2,10 +2,7 @@ package com.krickert.search.model.test.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
-import com.google.protobuf.ListValue;
-
+import com.google.protobuf.*;
 import com.google.protobuf.util.JsonFormat;
 
 import java.io.BufferedReader;
@@ -13,15 +10,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -92,7 +89,17 @@ public class JsonToProtoStructConverter {
                 valueBuilder.setNumberValue(jsonNode.doubleValue());
             }
         } else if (jsonNode.isTextual()) {
-            valueBuilder.setStringValue(jsonNode.textValue());
+            String textValue = jsonNode.textValue();
+            try {
+                Instant instant = Instant.parse(textValue);
+                Timestamp timestamp = Timestamp.newBuilder()
+                        .setSeconds(instant.getEpochSecond())
+                        .setNanos(instant.getNano())
+                        .build();
+                valueBuilder.setStringValue(JsonFormat.printer().print(timestamp));
+            } catch (DateTimeParseException | InvalidProtocolBufferException e) {
+                valueBuilder.setStringValue(textValue);
+            }
         } else if (jsonNode.isBoolean()) {
             valueBuilder.setBoolValue(jsonNode.booleanValue());
         } else if (jsonNode.isObject()) {
@@ -144,14 +151,16 @@ public class JsonToProtoStructConverter {
                 System.out.println(JsonFormat.printer().print(struct));
             }
 
-            List<Struct> resourceStructs = loadJsonFromResource("example.json");
-            for (Struct resourceStruct : resourceStructs) {
-                System.out.println(JsonFormat.printer().print(resourceStruct));
+            try {
+                List<Struct> resourceStructs = loadJsonFromResource("example.json");
+                for (Struct resourceStruct : resourceStructs) {
+                    System.out.println(JsonFormat.printer().print(resourceStruct));
+                }
+            } catch (IOException e) {
+                System.err.println("Warning: " + e.getMessage());
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
 }
