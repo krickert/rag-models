@@ -12,6 +12,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -80,7 +84,13 @@ public class JsonToProtoStructConverter {
         if (jsonNode.isNull()) {
             valueBuilder.setNullValueValue(0);
         } else if (jsonNode.isNumber()) {
-            valueBuilder.setNumberValue(jsonNode.doubleValue());
+            if (jsonNode.isInt()) {
+                valueBuilder.setNumberValue(jsonNode.intValue());
+            } else if (jsonNode.isLong()) {
+                valueBuilder.setNumberValue(jsonNode.longValue());
+            } else if (jsonNode.isDouble()) {
+                valueBuilder.setNumberValue(jsonNode.doubleValue());
+            }
         } else if (jsonNode.isTextual()) {
             valueBuilder.setStringValue(jsonNode.textValue());
         } else if (jsonNode.isBoolean()) {
@@ -97,6 +107,7 @@ public class JsonToProtoStructConverter {
 
         return valueBuilder.build();
     }
+
 
     public static List<Struct> loadJsonFromResource(String resourceName) throws IOException {
         InputStream inputStream = JsonToProtoStructConverter.class.getClassLoader().getResourceAsStream(resourceName);
@@ -141,4 +152,6 @@ public class JsonToProtoStructConverter {
             e.printStackTrace();
         }
     }
+
+
 }
