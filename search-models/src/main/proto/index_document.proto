@@ -1,0 +1,15 @@
+syntax = "proto3";
+package com.krickert.search.model.document;
+option java_multiple_files = true;
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message IndexDocument {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+  repeated string keywords = 4;
+  google.protobuf.Timestamp creation_date = 5;
+  google.protobuf.Timestamp last_updated_date = 6;
+  google.protobuf.Struct custom_data = 7;
+}
