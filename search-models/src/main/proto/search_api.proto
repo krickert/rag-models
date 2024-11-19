@@ -1,0 +1,221 @@
+syntax = "proto3";
+
+option java_outer_classname = "SearchApiProto";
+option java_multiple_files = true;
+
+package com.krickert.search.api;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// Enums for search strategy
+enum SortType {
+  FIELD = 0;
+  SCORE = 1;
+}
+
+enum SortOrder {
+  ASC = 0;
+  DESC = 1;
+}
+
+enum LogicalOperator {
+  OR = 0;
+  AND = 1;
+}
+
+enum StrategyType {
+  KEYWORD = 0;
+  SEMANTIC = 1;
+  // Add more strategy types as needed
+}
+
+// Sort options for search results
+message SortOptions {
+  SortType sortType = 1;
+  SortOrder sortOrder = 2;
+  optional string sortField = 3;  // Field to sort on, required if sortType is FIELD
+}
+
+// Filters for keyword-based or vector-based search
+// these will add be added as static fq=field:value to the query itself
+message Filter {
+  string field = 1;
+  string value = 2;
+}
+
+// Similarity options used for vector-based searches
+message SimilarityOptions {
+  optional float minReturn = 1;         // Minimum similarity for return, defaults to 1
+  optional float minTraverse = 2;       // Minimum similarity to traverse neighbors, defaults to -infinity
+  repeated Filter preFilter = 3;        // Pre-filter for candidate documents
+}
+
+// Parameters for a semantic vector search
+message SemanticOptions {
+  optional int32 topK = 1;              // Maximum number of top results
+  SimilarityOptions similarity = 2;     // Vector similarity configuration
+  repeated string includeTags = 3;      // Tags to include
+  repeated string excludeTags = 4;      // Tags to exclude
+  repeated string vectorFields = 5;     // Names of vector fields to use
+}
+
+// Parameters for keyword-based searches
+message KeywordOptions {
+  optional string queryTextOverride = 1; // the query text if we do not want this text to be the initial query
+  optional LogicalOperator keywordLogicalOperator = 2; // set the default keyword match operator for each keywords "must include all
+  // words" would be AND while "math on any or all words" would be the OR part.
+  repeated string overrideFieldsToQuery = 3;// for this particular set of options, use this set of fields instead
+  // Additional boosting options can be added here
+}
+
+// Encapsulates a single search strategy
+message SearchStrategy {
+  StrategyType type = 1; // Type of the strategy (e.g., KEYWORD, SEMANTIC)
+
+  oneof strategy_options {
+    SemanticOptions semantic = 2;
+    KeywordOptions keyword = 3;
+    // Add more options for new strategies here
+  }
+  // Optional boost factor for the strategy
+  optional float boost = 4; // Default boost is 1.0 if not specified
+}
+
+
+// Combined search strategies with logical operator
+message SearchStrategyOptions {
+  LogicalOperator operator = 1; // How to combine multiple strategies (AND/OR)
+  repeated SearchStrategy strategies = 2; // List of search strategies
+}
+
+
+// Highlighting options
+message HighlightOptions {
+  repeated string fields = 1;                  // Fields to apply highlighting (hl.fl)
+  optional string preTag = 2;                  // Tag to prepend to highlighted terms (e.g., <em>)
+  optional string postTag = 3;                 // Tag to append to highlighted terms (e.g., </em>)
+  optional int32 snippetCount = 4;             // Number of snippets per field
+  optional int32 snippetSize = 5;              // Size of each snippet in characters
+  optional bool semanticHighlight = 6;         // Whether to apply semantic-specific highlighting
+  optional bool offsets = 7;                   // Return highlighting offsets in the document metadata
+  optional string queryOverride = 9;           // Highlight query to use, would replace default
+}
+
+// FieldList for inclusion and exclusion
+message FieldList {
+  repeated string inclusionFields = 1;
+  repeated string exclusionFields = 2;
+}
+
+// Unified FacetRequest using oneof
+message FacetRequest {
+  oneof facet_type {
+    FacetField facetField = 1;
+    FacetRange facetRange = 2;
+    FacetQuery facetQuery = 3;
+  }
+}
+
+// Facet configurations
+message FacetField {
+  string field = 1;
+  optional int32 limit = 2;        // Limit the number of facets returned
+  optional bool missing = 3;       // Include counts for missing fields
+  optional string prefix = 4;      // Limit to facets starting with a prefix
+}
+
+message FacetRange {
+  string field = 1;
+  optional string start = 2;       // Range start value
+  optional string end = 3;         // Range end value
+  optional string gap = 4;         // Gap for range segmentation
+  optional bool hardend = 5;       // Force end of range to be the given end
+  optional string other = 6;       // Additional counts: before, after, between
+}
+
+message FacetQuery {
+  string query = 1;               // Facet query string
+}
+
+// Wrapper for multiple FacetResults
+message FacetResults {
+  string facetField = 1; //the name of the facet field
+  repeated FacetResult results = 2; // List of facet results for a facet field
+}
+
+// Additional parameters for search
+message Param {
+  string field = 1;
+  string value = 2;
+}
+
+message Params {
+  repeated Param param = 1;
+}
+
+// Search request encompassing all search parameters
+message SearchRequest {
+  string query = 1;                           // Search query string
+  optional int32 start = 2;                   // Start index for paging
+  optional int32 numResults = 3;              // Number of results to return
+  repeated string filterQueries = 4;          // Filter queries to refine search
+  optional SortOptions sort = 5;              // Sorting options
+  repeated FacetRequest facetRequests = 6;    // Unified facet requests
+  optional SearchStrategyOptions strategy = 9;         // Updated search strategy options
+  optional SearchStrategyOptions boostQueries = 10; //boost queries for relevancy.  uses the bq in edismax
+  optional Params additionalParams = 11;      // Additional parameters to append to the search
+  optional HighlightOptions highlightOptions = 12; // Highlighting preferences
+  optional FieldList fieldList = 13;
+}
+
+message Strings {
+  repeated string keyword = 1;
+}
+
+message DocMetadata {
+  repeated int32 pageNumbers = 1;
+  optional string docType = 2;
+  optional string extension = 3;
+  optional google.protobuf.Timestamp lastUpdated = 4;
+  optional google.protobuf.Timestamp dateCreated = 5;
+  optional Strings keywords = 6;
+  optional Strings categories = 7;
+  optional string source = 8;
+}
+
+// Individual search result
+message SearchResult {
+  string id = 1;                         // Document ID
+  string snippet = 3;                    // A snippet of the document content with highlights
+  repeated string matchedText = 4;       // Text matched by vectors or keyword
+  google.protobuf.Struct fields = 5;     // Additional fields from the document
+  optional DocMetadata metadata = 6;     // misc doc metadata
+}
+
+// Facet result for returned facet data
+message FacetResult {
+  string facet = 1;                      // Facet value
+  int64 facetCount = 2;                  // Count for the facet value
+}
+
+// Response message for search results, including facets and metadata
+message SearchResponse {
+  repeated SearchResult results = 1;                     // Search results
+  map<string, FacetResults> facets = 2;                   // Facet information mapped to their results
+  int64 totalResults = 3;                                  // Total number of results
+  int32 qTime = 4;                                         // Time taken to perform the search in ms
+  google.protobuf.Timestamp timeOfSearch = 5;              // Time of the search
+}
+
+// Request for developer/test cases
+message DevRequest {
+  map<string, string> requestParams = 1; // Custom request params for testing
+  bool useBasicDefaults = 2;             // Use defaults from configuration
+}
+
+// The search service definition
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc DeveloperSearch(DevRequest) returns (SearchResponse);
+}
